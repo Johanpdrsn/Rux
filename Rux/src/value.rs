@@ -1,4 +1,4 @@
-use std::{fmt::Display};
+use std::fmt::Display;
 
 #[derive(Debug, Clone)]
 pub enum Value {
