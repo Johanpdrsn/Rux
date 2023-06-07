@@ -10,6 +10,7 @@ impl Interpreter {
     }
 
     pub fn interpret(&mut self, source: &str) {
-        let mut compiler = Compiler::new(source);
+        let mut compiler = Compiler::from_source(source);
+        compiler.compile();
     }
 }

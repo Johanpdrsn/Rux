@@ -8,6 +8,7 @@ mod compiler;
 mod interpreter;
 pub mod scanner;
 mod stack;
+mod token;
 mod value;
 mod vm;
 fn main() {
@@ -56,7 +57,7 @@ fn repl() {
                     break;
                 }
             }
+            interpreter.interpret(&source);
         }
-        interpreter.interpret(&source);
     }
 }
