@@ -6,6 +6,7 @@ use std::{
 mod chunk;
 mod compiler;
 mod interpreter;
+mod precedence;
 pub mod scanner;
 mod stack;
 mod token;

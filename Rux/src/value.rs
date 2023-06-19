@@ -16,3 +16,13 @@ impl Display for Value {
         }
     }
 }
+
+impl Value {
+    pub fn is_falsey(&self) -> bool {
+        match self {
+            Value::Boolean(b) => !b,
+            Value::Nil => true,
+            _ => false,
+        }
+    }
+}

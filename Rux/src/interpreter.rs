@@ -11,6 +11,11 @@ impl Interpreter {
 
     pub fn interpret(&mut self, source: &str) {
         let mut compiler = Compiler::from_source(source);
-        compiler.compile();
+        let function = compiler.compile();
+        
+        if !compiler.had_error{
+            self.vm.run_main(function).unwrap();
+        }
+
     }
 }

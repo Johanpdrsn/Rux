@@ -2,7 +2,6 @@ use crate::value::Value;
 
 #[derive(Debug)]
 pub enum OpCode {
-    Return,
     Constant(usize),
     Negate,
 
@@ -10,14 +9,17 @@ pub enum OpCode {
     Subtract,
     Multiply,
     Divide,
+    Not,
+
+    Return,
 }
 impl OpCode {
     pub fn disassemble(&self, chunk: &Chunk, offset: usize) {
         print!("{:04} ", offset);
 
-        if offset > 0 {
+        // if offset > 0 {
             print!("   | ");
-        }
+        // }
         // else {
         //     print!("{:4} ", chunk.lines[offset]);
         // }

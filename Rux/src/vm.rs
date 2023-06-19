@@ -32,7 +32,12 @@ impl VM {
         }
     }
 
-    pub fn run(&mut self) -> InterpretResult<()> {
+    pub fn run_main(&mut self, function: Chunk) -> InterpretResult<()>{
+        self.chunk = function;
+        self.run()
+    }
+
+    pub fn run(&mut self,) -> InterpretResult<()> {
         loop {
             let op = self.chunk.op_get(self.ip);
 
@@ -61,6 +66,11 @@ impl VM {
                 Some(OpCode::Subtract) => VM::binary(&mut self.stack, |a, b| Value::Number(a - b))?,
                 Some(OpCode::Multiply) => VM::binary(&mut self.stack, |a, b| Value::Number(a * b))?,
                 Some(OpCode::Divide) => VM::binary(&mut self.stack, |a, b| Value::Number(a / b))?,
+                Some(OpCode::Not) => {
+                    let old = self.stack.pop()?;
+                    let new = old.is_falsey();
+                    self.stack.push(Value::Boolean(new));
+                }
                 // Some(_) => (),
                 None => (),
             }
