@@ -4,6 +4,9 @@ use crate::value::Value;
 pub enum OpCode {
     Constant(usize),
     Negate,
+    True,
+    False,
+    Nil,
 
     Add,
     Subtract,

@@ -67,6 +67,9 @@ impl VM {
                     let constant = frame.function.read_constant(*iid);
                     self.stack.push(constant.clone());
                 }
+                Some(OpCode::Nil) => self.stack.push(Value::Nil),
+                Some(OpCode::True) => self.stack.push(Value::Boolean(true)),
+                Some(OpCode::False) => self.stack.push(Value::Boolean(false)),
                 Some(OpCode::Negate) => {
                     let n = self.stack.pop_number()?;
                     let res = -n;

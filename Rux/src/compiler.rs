@@ -30,13 +30,13 @@ impl<'a> Compiler<'a> {
         let mut frame = Chunk::new();
         self.advance();
 
-        if !self.matches(TokenType::Eof){
+        if !self.matches(TokenType::Eof) {
             self.expression(&mut frame);
         }
 
         self.emit_return(&mut frame);
 
-        #[cfg(feature = "debug_print_code")]
+        // #[cfg(feature = "debug_print_code")]
         if !self.had_error {
             frame.disassemble("code");
         }
@@ -109,6 +109,18 @@ impl<'a> Compiler<'a> {
         self.consume(TokenType::RightParen, "Expect ')' after expression.")
     }
 
+    fn literal(&mut self, frame: &mut Chunk) {
+        match self.previous.token_type {
+            TokenType::True => frame.emit(OpCode::True),
+            TokenType::False => frame.emit(OpCode::False),
+            TokenType::Nil => frame.emit(OpCode::Nil),
+            _ => panic!(
+                "Expected a literal but found {:?}",
+                self.previous.token_type
+            ),
+        }
+    }
+
     fn unary(&mut self, frame: &mut Chunk) {
         let operator_type = self.previous.token_type;
 
@@ -168,6 +180,9 @@ impl<'a> Compiler<'a> {
             TokenType::LeftParen => self.grouping(frame),
             TokenType::Minus => self.unary(frame),
             TokenType::Number => self.number(frame),
+            TokenType::True => self.literal(frame),
+            TokenType::False => self.literal(frame),
+            TokenType::Nil => self.literal(frame),
             TokenType::Bang => self.unary(frame),
             tt => panic!("Expected expresion, got {:?}", tt),
         }
