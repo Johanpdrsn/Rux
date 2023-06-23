@@ -16,6 +16,5 @@ impl Interpreter {
         if !compiler.had_error{
             self.vm.run_main(function).unwrap();
         }
-
     }
 }

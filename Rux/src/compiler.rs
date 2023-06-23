@@ -36,7 +36,7 @@ impl<'a> Compiler<'a> {
 
         self.emit_return(&mut frame);
 
-        // #[cfg(feature = "debug_print_code")]
+        #[cfg(feature = "debug_print_code")]
         if !self.had_error {
             frame.disassemble("code");
         }

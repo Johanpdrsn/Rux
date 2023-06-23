@@ -2,11 +2,18 @@ use crate::chunk::{Chunk, OpCode};
 use crate::stack::Stack;
 use crate::value::Value;
 
-#[derive(Debug)]
-pub struct VM {
-    pub chunk: Chunk,
-    pub ip: usize,
-    pub stack: Stack,
+struct CallFrame<'a> {
+    function: &'a Chunk,
+    ip: usize,
+}
+
+impl<'a> CallFrame<'a> {
+    pub fn new(func: &'a Chunk) -> Self {
+        CallFrame {
+            function: func,
+            ip: 0,
+        }
+    }
 }
 
 pub type InterpretResult<T> = Result<T, RuntimeError>;
@@ -22,31 +29,34 @@ impl RuntimeError {
         Self::Other(message.to_string())
     }
 }
+#[derive(Debug)]
+pub struct VM {
+    pub stack: Stack,
+}
 
 impl VM {
     pub fn new() -> Self {
         VM {
-            chunk: Chunk::new(),
-            ip: 0,
             stack: Stack::new(),
         }
     }
 
-    pub fn run_main(&mut self, function: Chunk) -> InterpretResult<()>{
-        self.chunk = function;
-        self.run()
+    pub fn run_main(&mut self, function: Chunk) -> InterpretResult<()> {
+        self.run(function)
     }
 
-    pub fn run(&mut self,) -> InterpretResult<()> {
+    pub fn run(&mut self, function: Chunk) -> InterpretResult<()> {
+        let mut frame = CallFrame::new(&function);
+
         loop {
-            let op = self.chunk.op_get(self.ip);
+            let op = frame.function.op_get(frame.ip);
 
             for val in self.stack.contents() {
                 println!("[ {val} ]");
             }
-            op.unwrap().disassemble(&self.chunk, self.ip);
+            op.unwrap().disassemble(&frame.function, frame.ip);
 
-            self.ip += 1;
+            frame.ip += 1;
 
             match op {
                 Some(OpCode::Return) => {
@@ -54,7 +64,7 @@ impl VM {
                     return Ok(());
                 }
                 Some(OpCode::Constant(iid)) => {
-                    let constant = self.chunk.read_constant(*iid);
+                    let constant = frame.function.read_constant(*iid);
                     self.stack.push(constant.clone());
                 }
                 Some(OpCode::Negate) => {

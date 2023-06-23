@@ -27,7 +27,7 @@ impl Stack {
         match self.pop()? {
             Value::Number(n) => Ok(n),
             v => Err(RuntimeError::new(&format!(
-                "Expected to pop a number byt found '{}'.\n{}",
+                "Expected to pop a number but found '{}'.\n{}",
                 v, self
             ))),
         }

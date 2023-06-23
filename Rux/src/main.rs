@@ -58,7 +58,7 @@ fn repl() {
                     break;
                 }
             }
-            interpreter.interpret(&source);
         }
+        interpreter.interpret(&source);
     }
 }
