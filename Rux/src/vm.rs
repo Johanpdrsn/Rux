@@ -1,3 +1,5 @@
+use std::{ops::Neg, fmt::Display};
+
 use crate::chunk::{Chunk, OpCode};
 use crate::stack::Stack;
 use crate::value::Value;
@@ -29,6 +31,19 @@ impl RuntimeError {
         Self::Other(message.to_string())
     }
 }
+
+impl Display for RuntimeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            RuntimeError::NoMoreOperations(ip) => f.write_fmt(format_args!(
+                "The VM was halted because there were no more operations at the ip {}",
+                ip
+            )),
+            RuntimeError::Other(str) => f.write_str(str),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct VM {
     pub stack: Stack,
@@ -41,11 +56,11 @@ impl VM {
         }
     }
 
-    pub fn run_main(&mut self, function: Chunk) -> InterpretResult<()> {
+    pub fn run_main(&mut self, function: &Chunk) -> InterpretResult<()> {
         self.run(function)
     }
 
-    pub fn run(&mut self, function: Chunk) -> InterpretResult<()> {
+    pub fn run(&mut self, function: &Chunk) -> InterpretResult<()> {
         let mut frame = CallFrame::new(&function);
         let code = function.code();
         loop {
@@ -73,8 +88,7 @@ impl VM {
                 OpCode::False => self.stack.push(Value::Boolean(false)),
                 OpCode::Negate => {
                     let n = self.stack.pop_number()?;
-                    let res = -n;
-                    self.stack.push(Value::Number(res));
+                    self.stack.push(Value::Number(n.neg()));
                 }
                 OpCode::Add => VM::binary(&mut self.stack, |a, b| Value::Number(a + b))?,
                 OpCode::Subtract => VM::binary(&mut self.stack, |a, b| Value::Number(a - b))?,
@@ -98,5 +112,43 @@ impl VM {
         let res = implementation(a, b);
         stack.push(res);
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{CallFrame, VM};
+    use crate::{
+        chunk::{Chunk, OpCode},
+        value::Value,
+        vm::RuntimeError,
+    };
+
+    #[test]
+    fn constants() {
+        let mut chunk = Chunk::new();
+        chunk.emit_many(&mut vec![OpCode::Constant(0), OpCode::True, OpCode::Nil]);
+        chunk.add_constant(Value::Number(2.0));
+
+        let mut function = CallFrame::new(&chunk);
+        assert_stack(&mut function, vec![Value::Number(2.0), Value::Boolean(true), Value::Nil])
+    }
+
+    fn assert_stack(function: &mut CallFrame, stack: Vec<Value>) {
+        let mut vm = VM::new();
+        match vm.run(function.function) {
+            Ok(_) => panic!("Expected the VM to halt but it didn't"),
+            Err(RuntimeError::NoMoreOperations(_)) => {
+                assert_eq!(
+                    vm.stack.contents(),
+                    &stack,
+                    "Stack contents are not the same"
+                )
+            }
+            Err(other) => panic!(
+                "Expected the VM to halt but another error happened: {}",
+                other
+            ),
+        }
     }
 }

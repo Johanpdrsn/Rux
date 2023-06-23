@@ -14,7 +14,7 @@ impl Interpreter {
         let function = compiler.compile();
         
         if !compiler.had_error{
-            self.vm.run_main(function).unwrap();
+            self.vm.run_main(&function).unwrap();
         }
     }
 }
