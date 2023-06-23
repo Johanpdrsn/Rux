@@ -1,4 +1,4 @@
-use crate::token::{self, Token, TokenResult, TokenType};
+use crate::token::{Token, TokenResult, TokenType};
 use std::{iter::Peekable, str::Chars};
 
 #[derive(Debug)]

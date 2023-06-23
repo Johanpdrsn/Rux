@@ -47,45 +47,44 @@ impl VM {
 
     pub fn run(&mut self, function: Chunk) -> InterpretResult<()> {
         let mut frame = CallFrame::new(&function);
-
+        let code = function.code();
         loop {
-            let op = frame.function.op_get(frame.ip);
+            let op = code
+                .get(frame.ip)
+                .ok_or(RuntimeError::NoMoreOperations(frame.ip))?;
 
-            for val in self.stack.contents() {
-                println!("[ {val} ]");
-            }
-            op.unwrap().disassemble(&frame.function, frame.ip);
+            // for val in self.stack.contents() {
+            //     println!("[ {val} ]");
+            // }
 
             frame.ip += 1;
 
             match op {
-                Some(OpCode::Return) => {
+                OpCode::Return => {
                     println!("{}", self.stack.pop().unwrap());
                     return Ok(());
                 }
-                Some(OpCode::Constant(iid)) => {
+                OpCode::Constant(iid) => {
                     let constant = frame.function.read_constant(*iid);
                     self.stack.push(constant.clone());
                 }
-                Some(OpCode::Nil) => self.stack.push(Value::Nil),
-                Some(OpCode::True) => self.stack.push(Value::Boolean(true)),
-                Some(OpCode::False) => self.stack.push(Value::Boolean(false)),
-                Some(OpCode::Negate) => {
+                OpCode::Nil => self.stack.push(Value::Nil),
+                OpCode::True => self.stack.push(Value::Boolean(true)),
+                OpCode::False => self.stack.push(Value::Boolean(false)),
+                OpCode::Negate => {
                     let n = self.stack.pop_number()?;
                     let res = -n;
                     self.stack.push(Value::Number(res));
                 }
-                Some(OpCode::Add) => VM::binary(&mut self.stack, |a, b| Value::Number(a + b))?,
-                Some(OpCode::Subtract) => VM::binary(&mut self.stack, |a, b| Value::Number(a - b))?,
-                Some(OpCode::Multiply) => VM::binary(&mut self.stack, |a, b| Value::Number(a * b))?,
-                Some(OpCode::Divide) => VM::binary(&mut self.stack, |a, b| Value::Number(a / b))?,
-                Some(OpCode::Not) => {
+                OpCode::Add => VM::binary(&mut self.stack, |a, b| Value::Number(a + b))?,
+                OpCode::Subtract => VM::binary(&mut self.stack, |a, b| Value::Number(a - b))?,
+                OpCode::Multiply => VM::binary(&mut self.stack, |a, b| Value::Number(a * b))?,
+                OpCode::Divide => VM::binary(&mut self.stack, |a, b| Value::Number(a / b))?,
+                OpCode::Not => {
                     let old = self.stack.pop()?;
                     let new = old.is_falsey();
                     self.stack.push(Value::Boolean(new));
                 }
-                // Some(_) => (),
-                None => (),
             }
         }
     }
