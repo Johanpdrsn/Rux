@@ -6,12 +6,14 @@ use std::{
 mod chunk;
 mod compiler;
 mod interpreter;
+mod objects;
 mod precedence;
-pub mod scanner;
+mod scanner;
 mod stack;
 mod token;
 mod value;
 mod vm;
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     match args.len() {

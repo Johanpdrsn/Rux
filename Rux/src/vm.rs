@@ -1,6 +1,8 @@
-use std::{ops::Neg, fmt::Display};
+use std::rc::Rc;
+use std::{fmt::Display, ops::Neg};
 
 use crate::chunk::{Chunk, OpCode};
+use crate::objects::StringObject;
 use crate::stack::Stack;
 use crate::value::Value;
 
@@ -90,7 +92,19 @@ impl VM {
                     let n = self.stack.pop_number()?;
                     self.stack.push(Value::Number(n.neg()));
                 }
-                OpCode::Add => VM::binary(&mut self.stack, |a, b| Value::Number(a + b))?,
+                OpCode::Add => match self.stack.peek()? {
+                    Value::Number(_) => VM::binary(&mut self.stack, |a, b| Value::Number(a + b))?,
+                    Value::String(_) => {
+                        let b = self.stack.pop_string()?;
+                        let a = self.stack.pop_string()?;
+                        self.stack
+                            .push(Value::String(Rc::from(StringObject::from_owned(format!(
+                                "{}{}",
+                                a.value, b.value
+                            )))));
+                    }
+                    v => Err(RuntimeError::new(&format!("Can't add operand {:?}", v)))?,
+                },
                 OpCode::Subtract => VM::binary(&mut self.stack, |a, b| Value::Number(a - b))?,
                 OpCode::Multiply => VM::binary(&mut self.stack, |a, b| Value::Number(a * b))?,
                 OpCode::Divide => VM::binary(&mut self.stack, |a, b| Value::Number(a / b))?,
@@ -131,7 +145,10 @@ mod tests {
         chunk.add_constant(Value::Number(2.0));
 
         let mut function = CallFrame::new(&chunk);
-        assert_stack(&mut function, vec![Value::Number(2.0), Value::Boolean(true), Value::Nil])
+        assert_stack(
+            &mut function,
+            vec![Value::Number(2.0), Value::Boolean(true), Value::Nil],
+        )
     }
 
     fn assert_stack(function: &mut CallFrame, stack: Vec<Value>) {

@@ -1,6 +1,6 @@
 use crate::value::Value;
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 pub enum OpCode {
     Constant(usize),
     Negate,
@@ -21,7 +21,7 @@ impl OpCode {
         print!("{:04} ", offset);
 
         // if offset > 0 {
-            print!("   | ");
+        print!("   | ");
         // }
         // else {
         //     print!("{:4} ", chunk.lines[offset]);

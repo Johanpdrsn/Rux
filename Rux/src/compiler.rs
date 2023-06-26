@@ -1,11 +1,13 @@
 use crate::{
     chunk::Chunk,
     chunk::OpCode,
+    objects::StringObject,
     precedence::Precedence,
     scanner::Scanner,
     token::{TokenResult, TokenType},
+    value::Value,
 };
-
+use std::rc::Rc;
 #[derive(Debug)]
 pub struct Compiler<'a> {
     scanner: Scanner<'a>,
@@ -74,7 +76,7 @@ impl<'a> Compiler<'a> {
     }
 
     fn emit_return(&self, frame: &mut Chunk) {
-        frame.emit(crate::chunk::OpCode::Return)
+        frame.emit(OpCode::Return)
     }
 
     fn error_at_current(&mut self, message: &str) {
@@ -101,7 +103,13 @@ impl<'a> Compiler<'a> {
     fn number(&mut self, frame: &mut Chunk) {
         let data = self.previous.data.as_ref().unwrap();
         let val = data.lexeme.parse::<f64>().unwrap();
-        frame.emit_constant(crate::value::Value::Number(val))
+        frame.emit_constant(Value::Number(val))
+    }
+
+    fn string(&mut self, frame: &mut Chunk) {
+        let data = self.previous.data.as_ref().unwrap();
+        let val = StringObject::new(data.lexeme);
+        frame.emit_constant(Value::String(Rc::from(val)));
     }
 
     fn grouping(&mut self, frame: &mut Chunk) {
@@ -184,6 +192,7 @@ impl<'a> Compiler<'a> {
             TokenType::False => self.literal(frame),
             TokenType::Nil => self.literal(frame),
             TokenType::Bang => self.unary(frame),
+            TokenType::String => self.string(frame),
             tt => panic!("Expected expresion, got {:?}", tt),
         }
     }
